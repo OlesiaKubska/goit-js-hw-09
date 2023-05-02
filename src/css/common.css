@@ -16,3 +16,37 @@ img {
   display: block;
   max-width: 100%;
 }
+
+.timer {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.field {
+  text-align: center;
+  margin-right: 20px;
+  background-color: #ddd;
+  padding: 20px;
+  border-radius: 10px;
+}
+
+.field:last-child {
+  margin-right: 0;
+}
+
+.value {
+  font-size: 3em;
+  font-weight: bold;
+}
+
+.label {
+  font-size: 1.5em;
+  margin-top: 10px;
+  text-transform: uppercase;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
