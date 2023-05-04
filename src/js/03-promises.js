@@ -1,4 +1,4 @@
-import Notiflix from "notiflix";
+import { Notify } from "notiflix";
 
 const form = document.querySelector('form');
 form.addEventListener('submit', handleSubmit); //додали обробник події submit до форми, який викликає функцію handleSubmit
@@ -30,15 +30,13 @@ function handleSubmit(event) {
     promise.push(createPromise(i, delay + i * step));
   }
 //Коли всі проміси будуть створені, використовуємо Promise.all для очікування їх виконання. 
-  Promise.all(promises)
-    .then((results) => {
-      results.forEach(({ position, delay }) => {
-        notiflix.Notify.success(`✅ Fulfilled promise ${position} in ${delay}ms`);
-      });
+  Promise.all(promise)
+    .then(({ position, delay }) => {
+      Notify.success(`✅ Fulfilled promise ${position} in ${delay}ms`);
     })
-    .catch((results) => {
-      results.forEach(({ position, delay }) => {
-        notiflix.Notify.failure(`❌ Rejected promise ${position} in ${delay}ms`);
-      });
+    .catch(({ position, delay }) => {
+      Notify.failure(`❌ Rejected promise ${position} in ${delay}ms`);
     });
+    event.currentTarget.reset();
+    
 }
