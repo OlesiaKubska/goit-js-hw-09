@@ -2,39 +2,18 @@
 import flatpickr from "flatpickr";
 // Додатковий імпорт стилів
 import "flatpickr/dist/flatpickr.min.css";
-import Notiflix from "notiflix";
-
-
-const options = {
-  enableTime: true,
-  time_24hr: true,
-  defaultDate: new Date(),
-  minuteIncrement: 1,
-  onClose(selectedDates) {
-    const selectedDate = selectedDates[0];
-    // перевірка на вибір майбутньої дати
-    if (selectedDate < new Date()) {
-      Notiflix.Notify.failure("Please choose a date in the future");
-      startButton.disabled = true;
-    } else {
-      startButton.disabled = false;
-      // розрахунок часу між обраним часом та поточним часом
-      const msDiff = selectedDate.getTime() - new Date().getTime();
-      startTimer(msDiff);
-    }
-    console.log(selectedDates[0]);
-  },
-};
+import { Notify } from 'notiflix/build/notiflix-notify-aio';
 
 const daysEl = document.querySelector("[data-days]");
 const hoursEl = document.querySelector("[data-hours]");
 const minutesEl = document.querySelector("[data-minutes]");
 const secondsEl = document.querySelector("[data-seconds]");
 const startButton = document.querySelector("button[data-start]");
+const stopButton = document.querySelector("button[data-stop]");
 
 // Задайте значення за замовчуванням для змінних selectedDate та interval
-let selectedDate;
 let interval;
+// let selectedDate;
 
 // Функція, яка запускає таймер, та є обробником події для кнопки "Start"
 function startTimer() {
@@ -54,7 +33,7 @@ function startTimer() {
     if (timeLeft < 0) {
       clearInterval(interval);
       startButton.disabled = true;
-      Notiflix.Notify.success("Timer has ended!");
+      Notify.success("Timer has ended!");
     } else {
       // Форматування часу та відображення його на сторінці
       const { days, hours, minutes, seconds } = convertMs(timeLeft);
@@ -65,21 +44,6 @@ function startTimer() {
     }
   }, 1000);
 }
-
-// Обробник події для кнопки "Start"
-startButton.addEventListener("click", () => {
-  // Отримання дати, введеної користувачем за допомогою flatpickr
-  selectedDate = flatpickr("#date", options).selectedDates[0];
-  // Запуск таймера
-  startTimer();
-});
-
-// Обробник події для кнопки "Stop", який буде зупиняти інтервал.
-const stopButton = document.querySelector("button[data-stop]");
-
-stopButton.addEventListener("click", () => {
-  clearInterval(interval);
-});
 
 // функція для конвертування мілісекунд у дні, години, хвилини та секунди
 function convertMs(ms) {
@@ -101,12 +65,40 @@ function convertMs(ms) {
   return { days, hours, minutes, seconds };
 }
 
-const { days, hours, minutes, seconds } = convertMs(timeLeft);
-daysEl.textContent = days;
-hoursEl.textContent = hours;
-minutesEl.textContent = minutes;
-secondsEl.textContent = seconds; 
+// Обробник події для кнопки "Start"
+startButton.addEventListener("click", () => {
+  const options = {
+    enableTime: true,
+    time_24hr: true,
+    defaultDate: new Date(),
+    minuteIncrement: 1,
+    onClose(selectedDates) {
+      const selectedDate = selectedDates[0];
+    // перевірка на вибір майбутньої дати
+      if (selectedDate < new Date()) {
+        Notify.failure("Please choose a date in the future");
+        startButton.disabled = true;
+      } else {
+        startButton.disabled = false;
+        startTimer(selectedDate);
+      }
+    },
+  };
 
-console.log(convertMs(2000)); // {days: 0, hours: 0, minutes: 0, seconds: 2}
-console.log(convertMs(140000)); // {days: 0, hours: 0, minutes: 2, seconds: 20}
-console.log(convertMs(24140000)); // {days: 0, hours: 6 minutes: 42, seconds: 20}
+  // Отримання дати, введеної користувачем за допомогою flatpickr
+  const datepicker = flatpickr("#date", options);
+  startButton.disabled = true;
+});
+
+// Обробник події для кнопки "Stop", який буде зупиняти інтервал.
+// stopButton.addEventListener("click", () => {
+//   clearInterval(interval);
+//   startButton.disabled = false;
+// });
+
+const dateInput = document.querySelector("#date");
+// dateInput.value = new Date().toLocaleDateString(); //встановлює значення value для dateInput як поточну дату, отриману з new Date().toLocaleDateString()
+
+// console.log(convertMs(2000)); // {days: 0, hours: 0, minutes: 0, seconds: 2}
+// console.log(convertMs(140000)); // {days: 0, hours: 0, minutes: 2, seconds: 20}
+// console.log(convertMs(24140000)); // {days: 0, hours: 6 minutes: 42, seconds: 20}
