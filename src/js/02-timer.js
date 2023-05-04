@@ -2,47 +2,50 @@
 import flatpickr from "flatpickr";
 // Додатковий імпорт стилів
 import "flatpickr/dist/flatpickr.min.css";
-import { Notify } from 'notiflix/build/notiflix-notify-aio';
+import { Notify } from "notiflix";
 
-const daysEl = document.querySelector("[data-days]");
-const hoursEl = document.querySelector("[data-hours]");
-const minutesEl = document.querySelector("[data-minutes]");
-const secondsEl = document.querySelector("[data-seconds]");
+//Змінні intervalId, selectedDate та currentDate використовуються для зберігання значень інтервалу часу, які відповідають за таймер, вибраної користувачем дати та поточної дати відповідно
+let intervalId = null;
+let selectedDate = null;
+let currentDate = null;
+
+//За допомогою методу querySelector() змінним присвоюються елементи DOM
+const dataDays = document.querySelector("[data-days]");
+const dataHours = document.querySelector("[data-hours]");
+const dataMinutes = document.querySelector("[data-minutes]");
+const dataSeconds = document.querySelector("[data-seconds]");
 const startButton = document.querySelector("button[data-start]");
-const stopButton = document.querySelector("button[data-stop]");
 
-// Задайте значення за замовчуванням для змінних selectedDate та interval
-let interval;
-// let selectedDate;
+//За допомогою flatpickrInput до змінної присвоюється елемент DOM, який відповідає за відображення вибраної користувачем дати та часу
+const flatpickrInput = document.querySelector('#datetime-picker');
 
-// Функція, яка запускає таймер, та є обробником події для кнопки "Start"
-function startTimer() {
-  // Розрахунок різниці в мілісекундах між датою, введеною користувачем та поточною датою
-  const msDiff = selectedDate.getTime() - new Date().getTime();
-  
-  //перевірку на те, чи існує поточний інтервал перед його зупинкою, щоб уникнути помилок в разі повторної натискання кнопки "Stop".
-  if (interval) {
-    clearInterval(interval);
-  }
+startButton.disabled = true;
+startButton.addEventListener('click', onStartCounter); 
 
-  // Інтервал, який буде викликати функцію, що відображає залишок часу, кожну секунду.
-  interval = setInterval(() => {
-    const now = new Date().getTime();
-    const timeLeft = selectedDate - now; 
 
-    if (timeLeft < 0) {
-      clearInterval(interval);
-      startButton.disabled = true;
-      Notify.success("Timer has ended!");
+const options = {
+  enableTime: true,
+  time_24hr: true,
+  defaultDate: new Date(),
+  minuteIncrement: 1,
+  onClose(selectedDates) {
+    
+    // перевірка на вибір майбутньої дати
+    if (selectedDates[0].getTime() < Date.now()) {
+      Notify.failure("Please choose a date in the future.");
     } else {
-      // Форматування часу та відображення його на сторінці
-      const { days, hours, minutes, seconds } = convertMs(timeLeft);
-      daysEl.textContent = days;
-      hoursEl.textContent = hours;
-      minutesEl.textContent = minutes;
-      secondsEl.textContent = seconds;
+      selectedDate = selectedDates[0].getTime();
+      startButton.disabled = false;
+      Notify.success("Okay!");
     }
-  }, 1000);
+  },
+};
+  
+// Отримання дати, введеної користувачем за допомогою flatpickr
+const fp = flatpickr(flatpickrInput, options); 
+
+function onStartCounter() {
+  counter.start();
 }
 
 // функція для конвертування мілісекунд у дні, години, хвилини та секунди
@@ -65,40 +68,39 @@ function convertMs(ms) {
   return { days, hours, minutes, seconds };
 }
 
-// Обробник події для кнопки "Start"
-startButton.addEventListener("click", () => {
-  const options = {
-    enableTime: true,
-    time_24hr: true,
-    defaultDate: new Date(),
-    minuteIncrement: 1,
-    onClose(selectedDates) {
-      const selectedDate = selectedDates[0];
-    // перевірка на вибір майбутньої дати
-      if (selectedDate < new Date()) {
-        Notify.failure("Please choose a date in the future");
-        startButton.disabled = true;
-      } else {
-        startButton.disabled = false;
-        startTimer(selectedDate);
+//створюється об'єкт counter, який містить методи start() та stop().
+const counter = {
+  //Метод start() запускає таймер, який зберігається у змінній intervalId. В методі start() використовується метод setInterval() для оновлення таймера кожну секунду.
+  start() {
+    intervalId = setInterval(() => {
+      currentDate = Date.now();
+      const deltaTime = selectedDate - currentDate;
+      updateTimerface(convertMs(deltaTime));
+      startButton.disabled = true;
+      flatpickrInput.disabled = true;
+
+      if (deltaTime <= 1000) {
+        this.stop();
+        Notify.info('Congratulation! Timer stopped!');
       }
-    },
-  };
+    }, 1000);
+  },
+//Метод stop() зупиняє таймер
+  stop() {
+    startButton.disabled = true;
+    flatpickrInput.disabled = false;
+    clearInterval(intervalId);
+    return;
+  },
+};
 
-  // Отримання дати, введеної користувачем за допомогою flatpickr
-  const datepicker = flatpickr("#date", options);
-  startButton.disabled = true;
-});
+function updateTimerface({ days, hours, minutes, seconds }) {
+  dataDays.textContent = `${days}`;
+  dataHours.textContent = `${hours}`;
+  dataMinutes.textContent = `${minutes}`;
+  dataSeconds.textContent = `${seconds}`; // Форматування часу та відображення його на сторінці
+}
 
-// Обробник події для кнопки "Stop", який буде зупиняти інтервал.
-// stopButton.addEventListener("click", () => {
-//   clearInterval(interval);
-//   startButton.disabled = false;
-// });
-
-const dateInput = document.querySelector("#date");
-// dateInput.value = new Date().toLocaleDateString(); //встановлює значення value для dateInput як поточну дату, отриману з new Date().toLocaleDateString()
-
-// console.log(convertMs(2000)); // {days: 0, hours: 0, minutes: 0, seconds: 2}
-// console.log(convertMs(140000)); // {days: 0, hours: 0, minutes: 2, seconds: 20}
-// console.log(convertMs(24140000)); // {days: 0, hours: 6 minutes: 42, seconds: 20}
+function addLeadingZero(value) {
+  return String(value).padStart(2, '0'); //додає ведучі нулі до чисел з одним розрядом
+}
