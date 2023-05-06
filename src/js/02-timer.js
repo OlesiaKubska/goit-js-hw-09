@@ -95,10 +95,10 @@ const counter = {
 };
 
 function updateTimerface({ days, hours, minutes, seconds }) {
-  dataDays.textContent = `${days}`;
-  dataHours.textContent = `${hours}`;
-  dataMinutes.textContent = `${minutes}`;
-  dataSeconds.textContent = `${seconds}`; // Форматування часу та відображення його на сторінці
+  dataDays.textContent = `${addLeadingZero(days)}`;
+  dataHours.textContent = `${addLeadingZero(hours)}`;
+  dataMinutes.textContent = `${addLeadingZero(minutes)}`;
+  dataSeconds.textContent = `${addLeadingZero(seconds)}`; // Форматування часу та відображення його на сторінці
 }
 
 function addLeadingZero(value) {
